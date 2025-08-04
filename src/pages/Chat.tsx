@@ -29,11 +29,6 @@ interface Message {
 }
 
 export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProps) {
-  // Voice playback states (for demo voice message)
-  const [isVoicePlaying, setIsVoicePlaying] = useState(false)
-  const [voiceProgress, setVoiceProgress] = useState(0)
-  const [voiceDuration] = useState(15) // Demo duration in seconds
-
   // Chat states
   const [messages, setMessages] = useState<Message[]>([])
   const [inputText, setInputText] = useState('')
@@ -41,26 +36,6 @@ export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProp
   const [recordingTime, setRecordingTime] = useState(0)
   const [isTyping, setIsTyping] = useState(false)
   const [dragOver, setDragOver] = useState(false)
-
-  const toggleVoicePlayback = () => {
-    setIsVoicePlaying(!isVoicePlaying)
-    
-    if (!isVoicePlaying) {
-      // Simulate playback progress
-      const interval = setInterval(() => {
-        setVoiceProgress(prev => {
-          if (prev >= voiceDuration) {
-            setIsVoicePlaying(false)
-            clearInterval(interval)
-            return 0
-          }
-          return prev + 0.1
-        })
-      }, 100)
-    } else {
-      setVoiceProgress(0)
-    }
-  }
 
   const sendTextMessage = () => {
     if (!inputText.trim()) return
