@@ -1,69 +1,124 @@
-# React + TypeScript + Vite
+# TalkAI - AI Chat Widget
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Main color: #FF3988
 
-Currently, two official plugins are available:
+## 🚀 Quick Start
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+TalkAI is an embeddable AI chat widget similar to Tawk.to, designed specifically for e-commerce websites with WooCommerce integration.
 
-## Expanding the ESLint configuration
+## 📦 Installation
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### WordPress/WooCommerce Integration
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+#### Method 1: Direct Script (Recommended)
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+Add this code to your WordPress theme's `functions.php` file or use a plugin like "Insert Headers and Footers":
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```php
+// Add to functions.php
+function add_talkai_widget() {
+    ?>
+    <script src="https://your-domain.github.io/woocommerce-talk-ai/widget.js"></script>
+    <script>
+        TalkAI.init({
+            apiKey: 'your-api-key-here',
+            position: 'bottom-right', // bottom-right, bottom-left, top-right, top-left
+            theme: 'pink',
+            primaryColor: '#FF3988'
+        });
+    </script>
+    <?php
+}
+add_action('wp_footer', 'add_talkai_widget');
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+#### Method 2: Plugin Installation
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1. Upload the `widget.js` file to your WordPress media library
+2. Add the following code via **Appearance > Theme Editor** or a custom HTML widget:
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```html
+<!-- Add before closing </body> tag -->
+<script src="/wp-content/uploads/widget.js"></script>
+<script>
+TalkAI.init({
+    apiKey: 'your-api-key-here'
+});
+</script>
 ```
+
+#### Method 3: Using Header/Footer Plugin
+
+1. Install "Insert Headers and Footers" plugin
+2. Go to **Settings > Insert Headers and Footers**  
+3. Add this code to the **Footer** section:
+
+```html
+<script src="https://your-domain.github.io/woocommerce-talk-ai/widget.js"></script>
+<script>
+TalkAI.init({
+    apiKey: 'your-api-key-here',
+    position: 'bottom-right',
+    primaryColor: '#FF3988'
+});
+</script>
+```
+
+## ⚙️ Configuration Options
+
+```javascript
+TalkAI.init({
+    apiKey: 'your-api-key-here',     // Required: Your TalkAI API key
+    position: 'bottom-right',         // Optional: Widget position
+    theme: 'pink',                    // Optional: Color theme
+    primaryColor: '#FF3988',          // Optional: Custom primary color
+    widgetId: 'custom-id'            // Optional: Custom widget ID
+});
+```
+
+### Position Options
+- `bottom-right` (default)
+- `bottom-left`
+- `top-right` 
+- `top-left`
+
+## 🎨 Customization
+
+The widget automatically adapts to your website's style and is fully responsive. You can customize:
+
+- **Colors**: Change `primaryColor` to match your brand
+- **Position**: Choose where the widget appears
+- **Theme**: Built-in themes available
+
+## 🔧 Features
+
+- ✅ **One-line installation**
+- ✅ **Mobile responsive design**
+- ✅ **WooCommerce integration ready**
+- ✅ **Customizable appearance**
+- ✅ **AI-powered responses**
+- ✅ **Real-time messaging**
+- ✅ **No jQuery dependency**
+
+## 📱 Mobile Support
+
+The widget is fully responsive and optimized for mobile devices with touch-friendly controls.
+
+## 🛠️ Development
+
+To run the development server:
+
+```bash
+npm install
+npm run dev
+```
+
+To build for production:
+
+```bash
+npm run build
+```
+
+## 📞 Support
+
+For technical support or questions about integration, please visit our demo at [your-domain.github.io/woocommerce-talk-ai](https://your-domain.github.io/woocommerce-talk-ai)
