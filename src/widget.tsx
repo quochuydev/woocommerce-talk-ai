@@ -99,8 +99,8 @@ class ChatWidget {
     const positionStyles = {
       'bottom-right': 'bottom: 20px; right: 20px;',
       'bottom-left': 'bottom: 20px; left: 20px;',
-      'top-right': 'top: 20px; right: 20px;',
-      'top-left': 'top: 20px; left: 20px;'
+      'top-right': 'bottom: 20px; right: 20px;',
+      'top-left': 'bottom: 20px; left: 20px;'
     }
 
     return baseStyles + positionStyles[this.config.position!]

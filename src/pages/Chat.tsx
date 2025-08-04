@@ -2,11 +2,24 @@ import { Link } from 'react-router-dom'
 
 interface ChatProps {
   isWidget?: boolean
+  onMinimize?: () => void
+  onClose?: () => void
 }
 
-export default function Chat({ isWidget = false }: ChatProps) {
+export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProps) {
+  const handleMinimize = () => {
+    if (onMinimize) {
+      onMinimize()
+    }
+  }
+
+  const handleClose = () => {
+    if (onClose) {
+      onClose()
+    }
+  }
   return (
-    <div className="widget-root tw-min-h-screen tw-bg-gray-50">
+    <div className="widget-root tw-min-h-screen">
       {/* Navigation - only show when not in widget mode */}
       {!isWidget && (
         <nav className="tw-bg-white tw-shadow-sm tw-border-b tw-border-gray-100">
@@ -45,27 +58,52 @@ export default function Chat({ isWidget = false }: ChatProps) {
           <div className="tw-w-full tw-max-w-2xl tw-bg-white tw-rounded-2xl tw-shadow-2xl tw-overflow-hidden tw-border tw-border-gray-100">
             
             {/* Chat Header */}
-            <div className="tw-bg-gradient-to-r tw-from-primary-500 tw-to-primary-600 tw-text-white tw-p-6">
-              <div className="tw-flex tw-items-center tw-space-x-4">
-                <div className="tw-relative">
-                  <div className="tw-w-12 tw-h-12 tw-bg-white tw-rounded-full tw-flex tw-items-center tw-justify-center tw-shadow-lg">
-                    <svg className="tw-w-6 tw-h-6 tw-text-primary-500" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 3.04 1.05 4.35L2 22l5.65-1.05C9.96 21.64 11.46 22 13 22h7c1.1 0 2-.9 2-2V12c0-5.52-4.48-10-10-10z"/>
-                    </svg>
+            <div className="tw-bg-gradient-to-r tw-from-primary-500 tw-to-primary-600 tw-text-white tw-p-4">
+              <div className="tw-flex tw-items-center tw-justify-between">
+                <div className="tw-flex tw-items-center tw-space-x-3">
+                  <div className="tw-relative">
+                    <div className="tw-w-10 tw-h-10 tw-bg-white tw-rounded-full tw-flex tw-items-center tw-justify-center tw-shadow-lg">
+                      <svg className="tw-w-5 tw-h-5 tw-text-primary-500" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 3.04 1.05 4.35L2 22l5.65-1.05C9.96 21.64 11.46 22 13 22h7c1.1 0 2-.9 2-2V12c0-5.52-4.48-10-10-10z"/>
+                      </svg>
+                    </div>
+                    <div className="tw-absolute tw--bottom-1 tw--right-1 tw-w-3 tw-h-3 tw-bg-green-500 tw-rounded-full tw-border-2 tw-border-white"></div>
                   </div>
-                  <div className="tw-absolute tw--bottom-1 tw--right-1 tw-w-4 tw-h-4 tw-bg-green-500 tw-rounded-full tw-border-2 tw-border-white"></div>
+                  <div>
+                    <h3 className="tw-m-0 tw-text-base tw-font-semibold">TalkAI Assistant</h3>
+                    <div className="tw-flex tw-items-center tw-space-x-2">
+                      <div className="tw-w-2 tw-h-2 tw-bg-green-400 tw-rounded-full tw-animate-pulse"></div>
+                      <p className="tw-m-0 tw-text-xs tw-opacity-90">Online</p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="tw-text-lg tw-font-semibold">TalkAIWidget Assistant</h3>
-                  <div className="tw-flex tw-items-center tw-space-x-2">
-                    <div className="tw-w-2 tw-h-2 tw-bg-green-400 tw-rounded-full tw-animate-pulse"></div>
-                    <p className="tw-text-sm tw-opacity-90">Online & ready to help</p>
-                  </div>
+                
+                {/* Control Buttons */}
+                <div className="tw-flex tw-items-center tw-space-x-1">
+                  <button 
+                    onClick={handleMinimize}
+                    className="tw-w-8 tw-h-8 tw-rounded-full tw-bg-white tw-bg-opacity-20 hover:tw-bg-opacity-30 tw-transition-all tw-duration-200 tw-flex tw-items-center tw-justify-center"
+                    title="Minimize chat"
+                  >
+                    <svg className="tw-w-3 tw-h-3 tw-text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                    </svg>
+                  </button>
+                  <button 
+                    onClick={handleClose}
+                    className="tw-w-8 tw-h-8 tw-rounded-full tw-bg-white tw-bg-opacity-20 hover:tw-bg-opacity-30 tw-transition-all tw-duration-200 tw-flex tw-items-center tw-justify-center"
+                    title="Close chat"
+                  >
+                    <svg className="tw-w-3 tw-h-3 tw-text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>
 
             {/* Chat Messages Area */}
+            {(
             <div className="tw-h-96 tw-p-6 tw-overflow-y-auto tw-space-y-6">
               
               {/* Welcome Message */}
@@ -192,8 +230,10 @@ export default function Chat({ isWidget = false }: ChatProps) {
                 </div>
               </div>
             </div>
+            )}
 
             {/* Chat Input */}
+            {(
             <div className="tw-border-t tw-border-gray-100 tw-p-6 tw-bg-gray-50">
               <div className="tw-flex tw-space-x-3 tw-items-end">
                 <div className="tw-flex-1">
@@ -245,6 +285,7 @@ export default function Chat({ isWidget = false }: ChatProps) {
                 </p>
               </div>
             </div>
+            )}
           </div>
         </div>
       </div>

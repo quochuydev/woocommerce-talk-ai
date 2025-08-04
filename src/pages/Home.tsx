@@ -95,7 +95,7 @@ export default function Home() {
                   
                   {/* Chat Widget Floating */}
                   <div className="tw-absolute tw-bottom-2 tw-right-2">
-                    <div className="tw-bg-primary-500 hover:tw-bg-primary-600 tw-w-10 tw-h-10 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-shadow-lg tw-cursor-pointer tw-transition-all tw-animate-bounce-slow">
+                    <div id="talkai-widget-icon" className="tw-bg-primary-500 hover:tw-bg-primary-600 tw-w-10 tw-h-10 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-shadow-lg tw-cursor-pointer tw-transition-all tw-animate-bounce-slow">
                       <svg className="tw-w-5 tw-h-5 tw-text-white" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 3.04 1.05 4.35L2 22l5.65-1.05C9.96 21.64 11.46 22 13 22h7c1.1 0 2-.9 2-2V12c0-5.52-4.48-10-10-10z"/>
                       </svg>
@@ -313,7 +313,7 @@ export default function Home() {
                   <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 3.04 1.05 4.35L2 22l5.65-1.05C9.96 21.64 11.46 22 13 22h7c1.1 0 2-.9 2-2V12c0-5.52-4.48-10-10-10z"/>
                 </svg>
               </div>
-              <h3 className="tw-text-lg tw-font-semibold">TalkAI</h3>
+              <h3 className="tw-m-0 tw-text-lg tw-font-semibold">TalkAI</h3>
             </div>
             <p className="tw-text-sm tw-text-gray-400">
               Intelligent chat solutions for modern e-commerce
