@@ -4,7 +4,7 @@
 
 /* Essential base styles for the widget */
 @layer base {
-  .chat-widget-root {
+  .widget-root {
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
     line-height: 1.5;
     font-weight: 400;
@@ -13,13 +13,13 @@
     box-sizing: border-box;
   }
   
-  .chat-widget-root *,
-  .chat-widget-root *::before,
-  .chat-widget-root *::after {
+  .widget-root *,
+  .widget-root *::before,
+  .widget-root *::after {
     box-sizing: border-box;
   }
   
-  .chat-widget-root button {
+  .widget-root button {
     background: none;
     border: none;
     font: inherit;
@@ -28,7 +28,7 @@
 }
 
 @layer components {
-  .chat-message-user {
+  .message-user {
     background-color: #3b82f6;
     color: white;
     border-radius: 0.5rem;
@@ -38,7 +38,7 @@
     margin-bottom: 0.5rem;
   }
   
-  .chat-message-bot {
+  .message-bot {
     background-color: #f1f5f9;
     color: #1f2937;
     border-radius: 0.5rem;
@@ -48,7 +48,7 @@
     margin-bottom: 0.5rem;
   }
   
-  .chat-input {
+  .input {
     border: 1px solid #e2e8f0;
     border-radius: 0.5rem;
     padding: 0.5rem 0.75rem;
@@ -57,12 +57,12 @@
     outline: none;
   }
   
-  .chat-input:focus {
+  .input:focus {
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   }
   
-  .chat-button-primary {
+  .button-primary {
     background-color: #3b82f6;
     color: white;
     padding: 0.5rem 1rem;
@@ -74,7 +74,7 @@
     transition: background-color 0.2s;
   }
   
-  .chat-button-primary:hover {
+  .button-primary:hover {
     background-color: #2563eb;
   }
 }
