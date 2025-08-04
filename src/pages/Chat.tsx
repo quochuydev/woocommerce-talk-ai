@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useState } from 'react'
 
 interface ChatProps {
   isWidget?: boolean
@@ -7,6 +8,29 @@ interface ChatProps {
 }
 
 export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProps) {
+  const [isVoicePlaying, setIsVoicePlaying] = useState(false)
+  const [voiceProgress, setVoiceProgress] = useState(0)
+  const [voiceDuration] = useState(15) // Demo duration in seconds
+
+  const toggleVoicePlayback = () => {
+    setIsVoicePlaying(!isVoicePlaying)
+    
+    if (!isVoicePlaying) {
+      // Simulate playback progress
+      const interval = setInterval(() => {
+        setVoiceProgress(prev => {
+          if (prev >= voiceDuration) {
+            setIsVoicePlaying(false)
+            clearInterval(interval)
+            return 0
+          }
+          return prev + 0.1
+        })
+      }, 100)
+    } else {
+      setVoiceProgress(0)
+    }
+  }
   const handleMinimize = () => {
     if (onMinimize) {
       onMinimize()
@@ -179,17 +203,60 @@ export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProp
                   </div>
                 </div>
 
-                {/* Audio Message Example */}
+                {/* Voice Message Example */}
                 <div className="tw-flex tw-justify-end tw-mb-6">
                   <div className="tw-bg-gradient-to-r tw-from-primary-500 tw-to-primary-600 tw-text-white tw-rounded-2xl tw-rounded-tr-sm tw-px-4 tw-py-3 tw-max-w-xs tw-shadow-lg">
                     <div className="tw-flex tw-items-center tw-space-x-3">
-                      <div className="tw-flex tw-items-center tw-space-x-2 tw-bg-white tw-bg-opacity-20 tw-rounded-full tw-px-3 tw-py-2">
-                        <svg className="tw-w-4 tw-h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z"/>
-                        </svg>
-                        <span className="tw-text-xs tw-font-medium">0:15</span>
+                      <button 
+                        onClick={toggleVoicePlayback}
+                        className="tw-flex tw-items-center tw-justify-center tw-w-8 tw-h-8 tw-bg-white tw-bg-opacity-20 tw-rounded-full hover:tw-bg-opacity-30 tw-transition-all tw-duration-200"
+                      >
+                        {isVoicePlaying ? (
+                          <svg className="tw-w-4 tw-h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                          </svg>
+                        ) : (
+                          <svg className="tw-w-4 tw-h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                          </svg>
+                        )}
+                      </button>
+                      
+                      {/* Animated Waveform */}
+                      <div className="tw-flex tw-items-center tw-space-x-1">
+                        {[...Array(6)].map((_, i) => (
+                          <div
+                            key={i}
+                            className={`tw-w-1 tw-bg-white tw-rounded-full tw-transition-all tw-duration-200 ${
+                              isVoicePlaying 
+                                ? 'tw-animate-pulse tw-h-4' 
+                                : 'tw-h-2'
+                            }`}
+                            style={{
+                              animationDelay: `${i * 0.1}s`,
+                              height: isVoicePlaying 
+                                ? `${Math.sin((voiceProgress + i) * 0.5) * 8 + 12}px`
+                                : '8px'
+                            }}
+                          />
+                        ))}
                       </div>
-                      <span>🎵</span>
+                      
+                      <div className="tw-flex tw-items-center tw-space-x-2">
+                        <span className="tw-text-xs tw-font-medium">
+                          {Math.floor(voiceProgress)}:{String(Math.floor((voiceProgress % 1) * 60)).padStart(2, '0')}
+                        </span>
+                        <span className="tw-text-xs tw-opacity-75">/ 0:15</span>
+                      </div>
+                      <span>🎤</span>
+                    </div>
+                    
+                    {/* Progress bar */}
+                    <div className="tw-mt-2 tw-w-full tw-h-1 tw-bg-white tw-bg-opacity-20 tw-rounded-full tw-overflow-hidden">
+                      <div 
+                        className="tw-h-full tw-bg-white tw-rounded-full tw-transition-all tw-duration-100"
+                        style={{ width: `${(voiceProgress / voiceDuration) * 100}%` }}
+                      />
                     </div>
                   </div>
                 </div>
