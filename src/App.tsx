@@ -1,9 +1,29 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
 import Chat from './pages/Chat'
-import './App.css'
 
-function App() {
+interface WidgetConfig {
+  containerId?: string
+  theme?: 'light' | 'dark'
+  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
+  apiEndpoint?: string
+}
+
+interface AppProps {
+  widgetConfig?: WidgetConfig
+}
+
+function App({ widgetConfig }: AppProps = {}) {
+  // If running as widget, show chat directly
+  if (widgetConfig) {
+    return (
+      <div className="widget-root">
+        <Chat isWidget={true} />
+      </div>
+    )
+  }
+
+  // Normal app routing
   return (
     <Router basename="/woocommerce-talk-ai">
       <Routes>

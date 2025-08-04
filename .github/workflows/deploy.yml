@@ -33,6 +33,14 @@ jobs:
       - name: Build
         run: npm run build
         
+      - name: Build Widget
+        run: npm run build:widget
+        
+      - name: Copy widget files to dist
+        run: |
+          cp widget-dist/widget.iife.js dist/widget.js
+          cp widget-dist/widget.css dist/widget.css
+        
       - name: Setup Pages
         uses: actions/configure-pages@v4
         

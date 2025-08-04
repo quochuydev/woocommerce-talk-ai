@@ -26,7 +26,7 @@ Build a floating **React-based chat widget** that can be embedded on any website
 - Vite + React
 - TailwindCSS (optional)
 - Exported as a **single bundled JS file** (`widget.js`)
-- Configurable via `window.MyChatWidget.init(options)`
+- Configurable via `window.TalkAIWidget.init(options)`
 - Rendered using a floating `<div>` injected into the host page
 - Avoid CSS conflicts via unique class names or scoped styles
 - Optional: use Shadow DOM for total isolation
@@ -42,11 +42,11 @@ Build a floating **React-based chat widget** that can be embedded on any website
 ```
 
 ### Init Function
-The widget exposes a global window.MyChatWidget.init() function.
+The widget exposes a global window.TalkAIWidget.init() function.
 
 ```html
 <script>
-  window.MyChatWidget.init({
+  window.TalkAIWidget.init({
     apiEndpoint: "https://yourdomain.com/api/chat",       // Required
     suggestProductEndpoint: "https://yourdomain.com/api/suggest", // Optional
     position: "bottom-right",                              // or "bottom-left"
