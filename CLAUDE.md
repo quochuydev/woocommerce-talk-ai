@@ -162,14 +162,6 @@ npm run build:widget     # Build widget to widget-dist/
 npm run lint             # ESLint check
 ```
 
-## Environment Variables
-
-Create `.env.local` for local development:
-```
-VITE_API_ENDPOINT=https://your-api.com
-VITE_API_KEY=your-development-key
-```
-
 ## Important Instructions
 
 - Always prefer editing existing files over creating new ones

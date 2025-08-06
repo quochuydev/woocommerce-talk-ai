@@ -1,5 +1,8 @@
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { sendMessage, subscribeToMessages, updateConversation } from '../firebase/firestore'
+import type { FirebaseMessage } from '../firebase/types'
+import { v4 as uuidv4 } from 'uuid'
 
 interface ChatProps {
   isWidget?: boolean
@@ -36,43 +39,128 @@ export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProp
   const [recordingTime, setRecordingTime] = useState(0)
   const [isTyping, setIsTyping] = useState(false)
   const [dragOver, setDragOver] = useState(false)
+  const [sessionId] = useState(() => uuidv4())
 
-  const sendTextMessage = () => {
-    if (!inputText.trim()) return
+  // Enhanced logging utility
+  const log = (level: 'info' | 'warn' | 'error', message: string, data?: any) => {
+    const timestamp = new Date().toISOString()
+    const logMessage = `[TalkAI-${level.toUpperCase()}] ${timestamp} - ${message}`
+    
+    console.group(logMessage)
+    if (data) {
+      console.log('Data:', data)
+    }
+    console.log('Session ID:', sessionId)
+    console.log('Widget Mode:', isWidget)
+    console.trace('Stack trace')
+    console.groupEnd()
+    
+    // Also log to console in a simplified way for production debugging
+    if (level === 'error') {
+      console.error(logMessage, data)
+    } else if (level === 'warn') {
+      console.warn(logMessage, data)
+    } else {
+      console.log(logMessage, data)
+    }
+  }
 
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      type: 'text',
-      content: inputText.trim(),
-      sender: 'user',
-      timestamp: new Date()
+  // Initialize Firebase listeners
+  useEffect(() => {
+    log('info', 'Initializing chat session')
+    
+    // Subscribe to messages
+    const unsubscribe = subscribeToMessages(sessionId, (firebaseMessages: FirebaseMessage[]) => {
+      log('info', 'Received messages from Firebase', { count: firebaseMessages.length })
+      // Convert Firebase messages to local Message format
+      const convertedMessages: Message[] = firebaseMessages.map(msg => ({
+        ...msg,
+        id: msg.id || Date.now().toString(), // Ensure id is never undefined
+        timestamp: msg.timestamp || new Date()
+      }))
+      setMessages(convertedMessages)
+    })
+
+    // Initialize conversation metadata
+    updateConversation(sessionId, {
+      createdAt: new Date(),
+      isWidget,
+      userAgent: navigator.userAgent,
+      url: window.location.href
+    }).catch((error: any) => {
+      log('error', 'Failed to initialize conversation', error)
+    })
+
+    return () => {
+      log('info', 'Cleaning up chat session')
+      unsubscribe()
+    }
+  }, [sessionId, isWidget])
+
+  const sendTextMessage = async () => {
+    if (!inputText.trim()) {
+      log('warn', 'Attempted to send empty message')
+      return
     }
 
-    setMessages(prev => [...prev, newMessage])
-    setInputText('')
+    const messageContent = inputText.trim()
+    log('info', 'Sending text message', { content: messageContent, length: messageContent.length })
     
-    // Simulate AI response
-    setIsTyping(true)
-    setTimeout(() => {
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'text',
-        content: 'Thanks for your message! This is a demo response from the AI assistant.',
-        sender: 'ai',
-        timestamp: new Date()
+    setInputText('')
+
+    try {
+      // Send user message to Firebase
+      const userMessageData = {
+        type: 'text' as const,
+        content: messageContent,
+        sender: 'user' as const
       }
-      setMessages(prev => [...prev, aiResponse])
+      
+      log('info', 'Saving user message to Firebase', userMessageData)
+      await sendMessage(sessionId, userMessageData)
+      log('info', 'User message saved successfully')
+      
+      // Simulate AI response (only for text messages)
+      setIsTyping(true)
+      log('info', 'Starting AI response simulation')
+      
+      setTimeout(async () => {
+        try {
+          const aiResponseData = {
+            type: 'text' as const,
+            content: 'Thanks for your message! This is a demo response from the AI assistant.',
+            sender: 'ai' as const
+          }
+          
+          log('info', 'Saving AI response to Firebase', aiResponseData)
+          await sendMessage(sessionId, aiResponseData)
+          log('info', 'AI response saved successfully')
+          
+        } catch (error) {
+          log('error', 'Failed to save AI response', error)
+        } finally {
+          setIsTyping(false)
+        }
+      }, 1500)
+      
+    } catch (error) {
+      log('error', 'Failed to send text message', error)
       setIsTyping(false)
-    }, 1500)
+      
+      // Show error message to user
+      alert('Failed to send message. Please try again.')
+    }
   }
 
   const startRecording = () => {
+    log('info', 'Starting voice recording')
     setIsRecording(true)
     setRecordingTime(0)
     
     const interval = setInterval(() => {
       setRecordingTime(prev => {
         if (prev >= 60) { // Max 60 seconds
+          log('warn', 'Recording reached maximum duration', { duration: prev })
           stopRecording()
           clearInterval(interval)
           return 60
@@ -83,18 +171,23 @@ export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProp
   }
 
   const stopRecording = () => {
+    const duration = Math.round(recordingTime * 10) / 10
+    log('info', 'Stopping voice recording', { duration, minDuration: 0.5 })
     setIsRecording(false)
     
     if (recordingTime > 0.5) { // Minimum 0.5 seconds
+      log('info', 'Voice recording valid, creating message', { duration })
       const voiceMessage: Message = {
         id: Date.now().toString(),
         type: 'voice',
         content: 'Voice message',
         sender: 'user',
         timestamp: new Date(),
-        duration: Math.round(recordingTime * 10) / 10
+        duration
       }
       
+      // Note: Voice messages are NOT stored in Firebase yet
+      log('warn', 'Voice message created but NOT stored in Firebase (implementation pending)', voiceMessage)
       setMessages(prev => [...prev, voiceMessage])
       
       // Simulate AI response
@@ -107,9 +200,12 @@ export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProp
           sender: 'ai',
           timestamp: new Date()
         }
+        log('warn', 'AI response to voice message created but NOT stored in Firebase', aiResponse)
         setMessages(prev => [...prev, aiResponse])
         setIsTyping(false)
       }, 2000)
+    } else {
+      log('warn', 'Voice recording too short, discarding', { duration })
     }
     
     setRecordingTime(0)
@@ -118,6 +214,13 @@ export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProp
   const handleFileUpload = (file: File) => {
     const isImage = file.type.startsWith('image/')
     const fileUrl = URL.createObjectURL(file)
+    
+    log('info', 'File uploaded', { 
+      fileName: file.name, 
+      fileSize: file.size, 
+      fileType: file.type, 
+      isImage 
+    })
     
     const fileMessage: Message = {
       id: Date.now().toString(),
@@ -130,6 +233,8 @@ export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProp
       fileSize: file.size
     }
     
+    // Note: File messages are NOT stored in Firebase yet
+    log('warn', 'File message created but NOT stored in Firebase (implementation pending)', fileMessage)
     setMessages(prev => [...prev, fileMessage])
     
     // Simulate AI response
@@ -142,19 +247,26 @@ export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProp
         "Nice! I can see your attachment. How can I assist you with this?"
       ]
       
+      const selectedResponse = responses[Math.floor(Math.random() * responses.length)]
+      log('info', 'Generated AI response to file upload', { response: selectedResponse })
+      
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'text',
-        content: responses[Math.floor(Math.random() * responses.length)],
+        content: selectedResponse,
         sender: 'ai',
         timestamp: new Date()
       }
+      
+      log('warn', 'AI response to file upload created but NOT stored in Firebase', aiResponse)
       setMessages(prev => [...prev, aiResponse])
       setIsTyping(false)
     }, 1500)
   }
 
   const sendProductRecommendation = () => {
+    log('info', 'Sending demo product recommendation')
+    
     // Demo product data
     const products = [
       {
@@ -187,6 +299,7 @@ export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProp
     ]
     
     const randomProduct = products[Math.floor(Math.random() * products.length)]
+    log('info', 'Selected random product', randomProduct)
     
     const productMessage: Message = {
       id: Date.now().toString(),
@@ -197,12 +310,17 @@ export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProp
       product: randomProduct
     }
     
+    // Note: Product messages are NOT stored in Firebase yet
+    log('warn', 'Product message created but NOT stored in Firebase (implementation pending)', productMessage)
     setMessages(prev => [...prev, productMessage])
   }
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
-    setDragOver(true)
+    if (!dragOver) {
+      log('info', 'File drag detected')
+      setDragOver(true)
+    }
   }
 
   const handleDragLeave = (e: React.DragEvent) => {
@@ -215,26 +333,36 @@ export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProp
     setDragOver(false)
     
     const files = Array.from(e.dataTransfer.files)
+    log('info', 'Files dropped', { count: files.length, fileNames: files.map(f => f.name) })
+    
     if (files.length > 0) {
       handleFileUpload(files[0])
+    } else {
+      log('warn', 'No files in drop event')
     }
   }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
+    log('info', 'File selected via input', { count: files?.length || 0 })
+    
     if (files && files.length > 0) {
       handleFileUpload(files[0])
+    } else {
+      log('warn', 'No files selected')
     }
     // Reset input
     e.target.value = ''
   }
   const handleMinimize = () => {
+    log('info', 'Chat minimize requested')
     if (onMinimize) {
       onMinimize()
     }
   }
 
   const handleClose = () => {
+    log('info', 'Chat close requested')
     if (onClose) {
       onClose()
     }
@@ -275,7 +403,7 @@ export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProp
 
       {/* Chat Interface */}
       <div className={`tw-flex tw-flex-col tw-h-screen ${isWidget ? 'tw-pt-0' : 'tw-pt-16'}`}>
-        <div className="tw-flex-1 tw-flex tw-justify-center tw-items-center tw-p-6">
+        <div className={`tw-flex-1 tw-flex tw-justify-center ${isWidget ? 'tw-items-end' : 'tw-items-center'} tw-p-6`}>
           <div className="tw-w-full tw-max-w-2xl tw-bg-white tw-rounded-2xl tw-shadow-2xl tw-overflow-hidden tw-border tw-border-gray-100">
             
             {/* Chat Header */}
@@ -596,7 +724,7 @@ export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProp
               </div>
               
               <div className="tw-mt-4 tw-flex tw-flex-col tw-items-center tw-space-y-2">
-                <p className="tw-text-xs tw-text-gray-500">
+                <p className="tw-m-0 tw-text-xs tw-text-gray-500">
                   {isRecording 
                     ? "Release to send voice message" 
                     : "Type a message, upload files, or hold the voice button to record"
