@@ -1,10 +1,20 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # TalkAI Widget - Technical Documentation
 
 ## Project Overview
 
-A standalone React-based chat widget using Vite, functioning like Tawk.to or Intercom. The widget embeds into any website using a simple `<script>` tag and provides AI-powered chat functionality for e-commerce sites.
+A standalone React-based chat widget using Vite, functioning like Tawk.to or Intercom. The widget embeds into any website using a simple `<script>` tag and provides AI-powered chat functionality for e-commerce sites with Firebase backend integration.
 
 ## Architecture
+
+### Backend Integration
+- **Firebase Firestore** for real-time message persistence
+- **Firebase Storage** for file/image uploads (configured, not fully implemented)
+- **Firebase Auth** for user authentication (configured)
+- Environment variables for Firebase configuration via `.env` files
 
 ### Build System
 - **React + Vite** for development and bundling
@@ -36,34 +46,97 @@ export default defineConfig(({ mode }) => {
 })
 ```
 
-## Message Types Support
+## Message Types & Data Structure
 
-The widget supports multiple message formats:
+### Firebase Message Schema
+```typescript
+interface FirebaseMessage {
+  id?: string
+  type: 'text' | 'voice' | 'file' | 'image' | 'product'
+  content: string
+  sender: 'user' | 'ai'
+  timestamp?: any // Firebase timestamp
+  storedAt?: string
+  duration?: number      // For voice messages (seconds)
+  fileUrl?: string       // For file/image uploads
+  fileName?: string
+  fileSize?: number
+  product?: {            // For product recommendations
+    id: string
+    title: string
+    price: string
+    image: string
+    rating: number
+    reviews: number
+    url: string
+  }
+}
+```
 
-1. **Text Messages** - Standard user/AI text communication
-2. **Image Messages** - Thumbnail display with full-size view
-3. **Audio Messages** - Play button with audio controls
-4. **Skeleton Loading** - Typing indicators during AI processing
-5. **Product Cards** - E-commerce integration with title, price, image, CTA
+### Implementation Status
+- ✅ **Text Messages** - Fully implemented with Firebase persistence
+- 🚧 **Image Messages** - UI complete, Firebase storage pending
+- 🚧 **Audio/Voice Messages** - UI complete with recording, Firebase storage pending
+- 🚧 **File Attachments** - UI complete, Firebase storage pending
+- 🚧 **Product Cards** - UI complete, Firebase storage pending
+- ✅ **Skeleton Loading** - Typing indicators during AI processing
 
 ## Widget Integration
 
 ### Global API
 ```javascript
 window.TalkAIWidget.init({
-  apiKey: 'required-api-key',
-  position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left',
-  theme: 'light' | 'dark',
-  primaryColor: '#FF3988',
-  widgetId: 'custom-widget-id'
+  containerId: 'chat-widget-container', // optional custom container
+  theme: 'light',                      // light | dark
+  position: 'bottom-right',            // bottom-right | bottom-left | top-right | top-left
+  apiEndpoint: undefined               // future feature for custom AI endpoint
 })
 ```
 
+### Session Management
+- Unique session IDs generated using `uuid` for each chat instance
+- Conversations stored in Firebase Firestore with session-based organization
+- Real-time synchronization across multiple browser tabs
+
 ### Deployment Architecture
-- **GitHub Pages** hosting at `https://username.github.io/woocommerce-talk-ai/`
+- **GitHub Pages** hosting at `https://quochuydev.github.io/woocommerce-talk-ai/`
 - **CDN-ready** widget.js file for fast loading
 - **Automatic deployments** via GitHub Actions
 - **Cross-origin compatibility** with proper CORS handling
+
+## Firebase Development Setup
+
+### Prerequisites
+```bash
+# Install Firebase CLI globally
+npm install -g firebase-tools
+
+# Login to Firebase account
+firebase login
+
+# Initialize Firebase project (if not already done)
+firebase init hosting
+```
+
+### Environment Configuration
+Required environment variables (create `.env` file):
+```bash
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+```
+
+### Local Development with Firebase Emulator
+```bash
+# Start Firebase emulators
+firebase emulators:start
+
+# The app will automatically use emulators when detected
+# Text messages persist locally, other message types are UI-only
+```
 
 ## Development Setup
 
@@ -79,12 +152,20 @@ npm run preview      # Preview built app
 ### File Structure
 ```
 src/
-├── App.tsx          # Main app with routing
-├── widget.tsx       # Widget entry point
+├── App.tsx              # Main app with routing (widget/SPA modes)
+├── widget.tsx           # Widget entry point and global API
+├── main.tsx             # App entry point
+├── index.css            # TailwindCSS + scoped widget styles
 ├── pages/
-│   ├── Home.tsx     # Demo/landing page
-│   └── Chat.tsx     # Chat interface component
-└── assets/          # Static assets
+│   ├── Home.tsx         # Demo landing page
+│   └── Chat.tsx         # Full chat interface (750+ lines)
+├── firebase/
+│   ├── config.js        # Firebase configuration (environment variables)
+│   ├── firestore.js     # Database operations
+│   ├── auth.js          # Authentication
+│   ├── storage.js       # File storage
+│   └── types.ts         # TypeScript interfaces
+└── assets/              # Static assets
 ```
 
 ## Technical Features
@@ -94,20 +175,23 @@ src/
 - Adaptive layout for different screen sizes
 - Floating launcher that doesn't interfere with site content
 
+### Advanced Features
+- **Voice Recording**: 60-second maximum with visual waveform feedback
+- **File Upload**: Drag & drop support with file type validation
+- **Real-time Sync**: Firebase-powered message synchronization
+- **Session Persistence**: Conversations survive page refreshes
+- **Widget Positioning**: 4 corner positioning options
+- **Theme System**: Light/dark mode support with custom colors
+
 ### Style Isolation
 - Scoped CSS classes to prevent conflicts with host site
-- Optional shadow DOM implementation for complete isolation
 - Customizable theming system
-
-### API Integration
-- External API support for AI responses
-- Mock handlers for development/testing
-- Configurable endpoints and authentication
+- Mobile-optimized touch interactions
 
 ### Performance
-- Single bundle output (JS + CSS inlined)
+- Single bundle output (JS + CSS inlined for widget)
+- Minimal dependencies (React, Firebase, UUID, React Router)
 - Lazy loading for optimal performance
-- Minimal dependencies to reduce bundle size
 
 ## Deployment Pipeline
 
@@ -147,25 +231,51 @@ GitHub Actions workflow automatically:
 - Maintain small bundle size
 - Document API changes in this file
 
-## Build Commands Reference
+## Development Commands
 
 ```bash
+# Setup
+npm install              # Install dependencies
+npm install -g firebase-tools  # Install Firebase CLI
+firebase login           # Authenticate with Firebase
+
 # Development
 npm run dev              # Start dev server on http://localhost:5173
-npm run preview          # Preview production build
+npm run preview          # Preview production build locally
 
 # Production builds
 npm run build            # Build main app to dist/
-npm run build:widget     # Build widget to widget-dist/
+npm run build:widget     # Build widget to widget-dist/ and copy to public/
 
-# Linting
+# Code Quality
 npm run lint             # ESLint check
+
+# Firebase
+firebase emulators:start # Start local Firebase emulators
+firebase deploy          # Deploy to Firebase Hosting (optional)
 ```
+
+## Implementation Priorities
+
+### Current State
+- ✅ Text messages with Firebase persistence
+- 🚧 UI for images, voice, files, products (backend storage pending)
+- ✅ Widget embedding and positioning
+- ✅ Real-time synchronization for text messages
+
+### Next Development Steps
+1. **Complete Firebase Storage Integration** for non-text message types
+2. **Implement AI Response Integration** (currently UI mock responses)
+3. **Add Security Rules** for Firebase operations
+4. **Optimize Bundle Size** for faster widget loading
 
 ## Important Instructions
 
 - Always prefer editing existing files over creating new ones
 - Never create documentation files unless explicitly requested
 - Focus on functionality over extensive documentation
-- Keep bundle size minimal for fast loading
-- Test on multiple browsers and devices
+- Keep bundle size minimal for fast widget loading
+- Test widget embedding on different websites
+- Ensure mobile responsiveness at all screen sizes
+- Use TypeScript for all new code
+- Follow existing Firebase patterns for consistency
