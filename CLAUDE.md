@@ -11,11 +11,13 @@ A standalone React-based chat widget using Vite, functioning like Tawk.to or Int
 ## Architecture
 
 ### Backend Integration
+
 - **Local state management** - Messages persist only during the current session
 - **No external dependencies** - Fully client-side implementation
 - Ready for integration with custom AI endpoints or backend services
 
 ### Build System
+
 - **React + Vite** for development and bundling
 - **Dual build modes**:
   - Main app: Standard SPA build with React Router
@@ -24,12 +26,13 @@ A standalone React-based chat widget using Vite, functioning like Tawk.to or Int
 - **TypeScript** for type safety
 
 ### Bundle Configuration
+
 ```javascript
 // vite.config.ts
 export default defineConfig(({ mode }) => {
   const isWidget = mode === 'widget'
   return {
-    base: isWidget ? './' : '/woocommerce-talk-ai/',
+    base: isWidget ? './' : '/talk-ai-widget/',
     build: {
       outDir: isWidget ? 'widget-dist' : 'dist',
       ...(isWidget && {
@@ -37,10 +40,10 @@ export default defineConfig(({ mode }) => {
           entry: './src/widget.tsx',
           name: 'TalkAIWidget',
           formats: ['iife'],
-          fileName: 'widget'
-        }
-      })
-    }
+          fileName: 'widget',
+        },
+      }),
+    },
   }
 })
 ```
@@ -48,6 +51,7 @@ export default defineConfig(({ mode }) => {
 ## Message Types & Data Structure
 
 ### Message Schema
+
 ```typescript
 interface Message {
   id: string
@@ -55,11 +59,12 @@ interface Message {
   content: string
   sender: 'user' | 'ai'
   timestamp: Date
-  duration?: number      // For voice messages (seconds)
-  fileUrl?: string       // For file/image uploads
+  duration?: number // For voice messages (seconds)
+  fileUrl?: string // For file/image uploads
   fileName?: string
   fileSize?: number
-  product?: {            // For product recommendations
+  product?: {
+    // For product recommendations
     id: string
     title: string
     price: string
@@ -72,6 +77,7 @@ interface Message {
 ```
 
 ### Implementation Status
+
 - ✅ **Text Messages** - Fully implemented with local state
 - ✅ **Image Messages** - UI complete with preview
 - ✅ **Audio/Voice Messages** - UI complete with recording (60s max)
@@ -83,22 +89,25 @@ interface Message {
 ## Widget Integration
 
 ### Global API
+
 ```javascript
 window.TalkAIWidget.init({
   containerId: 'chat-widget-container', // optional custom container
-  theme: 'light',                      // light | dark
-  position: 'bottom-right',            // bottom-right | bottom-left | top-right | top-left
-  apiEndpoint: undefined               // future feature for custom AI endpoint
+  theme: 'light', // light | dark
+  position: 'bottom-right', // bottom-right | bottom-left | top-right | top-left
+  apiEndpoint: undefined, // future feature for custom AI endpoint
 })
 ```
 
 ### Session Management
+
 - Messages persist in local component state during the current page session
 - No persistence across page refreshes (can be added with localStorage/sessionStorage)
 - Each widget instance maintains its own independent state
 
 ### Deployment Architecture
-- **GitHub Pages** hosting at `https://quochuydev.github.io/woocommerce-talk-ai/`
+
+- **GitHub Pages** hosting at `https://quochuydev.github.io/talk-ai-widget/`
 - **CDN-ready** widget.js file for fast loading
 - **Automatic deployments** via GitHub Actions
 - **Cross-origin compatibility** with proper CORS handling
@@ -106,6 +115,7 @@ window.TalkAIWidget.init({
 ## Development Setup
 
 ### Local Development
+
 ```bash
 npm install           # Install dependencies
 npm run dev          # Start development server (main app)
@@ -115,6 +125,7 @@ npm run preview      # Preview built app
 ```
 
 ### File Structure
+
 ```
 src/
 ├── App.tsx              # Main app with routing (widget/SPA modes)
@@ -130,11 +141,13 @@ src/
 ## Technical Features
 
 ### Responsive Design
+
 - Mobile-first approach with touch-friendly controls
 - Adaptive layout for different screen sizes
 - Floating launcher that doesn't interfere with site content
 
 ### Advanced Features
+
 - **Voice Recording**: 60-second maximum with visual waveform feedback
 - **File Upload**: Drag & drop support with file type validation
 - **Local State Management**: Messages stored in component state
@@ -143,11 +156,13 @@ src/
 - **Product Cards**: Rich product recommendation display
 
 ### Style Isolation
+
 - Scoped CSS classes to prevent conflicts with host site
 - Customizable theming system
 - Mobile-optimized touch interactions
 
 ### Performance
+
 - Single bundle output (JS + CSS inlined for widget)
 - Minimal dependencies (React, React Router, UUID)
 - Widget bundle: ~261 KB (79 KB gzipped)
@@ -157,12 +172,14 @@ src/
 ## Deployment Pipeline
 
 GitHub Actions workflow automatically:
+
 1. Builds both main app and widget
 2. Copies widget files to dist/ folder
 3. Creates 404.html for client-side routing
 4. Deploys to GitHub Pages
 
 ### Build Commands
+
 - `npm run build` - Main app build
 - `npm run build:widget` - Widget-only build
 - Files copied: `widget.iife.js` → `widget.js`, `widget.css`
@@ -213,6 +230,7 @@ npm run lint             # ESLint check
 ## Implementation Priorities
 
 ### Current State
+
 - ✅ All message types (text, voice, file, image, product) with UI
 - ✅ Widget embedding and positioning
 - ✅ Local state management for messages
@@ -220,6 +238,7 @@ npm run lint             # ESLint check
 - ✅ Optimized bundle size (~261 KB / 79 KB gzipped)
 
 ### Next Development Steps
+
 1. **Add Backend Integration** - Connect to AI API endpoint for real responses
 2. **Add Persistence** - Optional localStorage/sessionStorage for message history
 3. **Implement Real File Handling** - Currently files are preview-only (blob URLs)
