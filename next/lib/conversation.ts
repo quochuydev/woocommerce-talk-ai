@@ -1,5 +1,5 @@
 import { Message } from '@/types/message'
-import { Firestore } from 'firebase-admin/firestore'
+import { Firestore, Timestamp } from 'firebase-admin/firestore'
 
 export async function getConversationHistory(
   db: Firestore,
@@ -33,7 +33,7 @@ export async function saveMessage(
   const messagesRef = db.collection(`sessions/${sessionId}/messages`)
   const docRef = await messagesRef.add({
     ...message,
-    timestamp: Firestore.Timestamp.now(),
+    timestamp: Timestamp.now(),
   })
   return docRef.id
 }

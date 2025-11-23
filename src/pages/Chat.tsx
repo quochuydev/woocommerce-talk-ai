@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { useChat } from '../hooks/useChat'
+import { useChatAPI } from '../hooks/useChatAPI'
 import { generateAIResponse } from '../services/aiService'
 
 interface ChatProps {
@@ -26,22 +26,23 @@ export default function Chat({ isWidget = false, onMinimize, onClose, sessionId 
 
   // Memoize error handler to prevent re-renders
   const handleFirebaseError = useCallback((error: Error) => {
-    log('error', 'Firebase error', error)
+    log('error', 'API error', error)
   }, [log])
 
-  // Firebase chat hook with localStorage persistence
+  // API-based chat hook with localStorage persistence
   const {
     sessionId: activeSessionId,
     messages,
-    sendVoiceMessage: sendVoiceToFirebase,
-    sendFileMessage: sendFileToFirebase,
+    sendVoiceMessage: sendVoiceToAPI,
+    sendFileMessage: sendFileToAPI,
     sendAIResponse,
-    sendProductRecommendation: sendProductToFirebase,
-  } = useChat({
+    sendProductRecommendation: sendProductToAPI,
+  } = useChatAPI({
     sessionId: sessionId, // Use provided sessionId or auto-restore from localStorage
     onError: handleFirebaseError,
     persistSession: true, // Enable localStorage persistence
     storageKey: isWidget ? 'talkai-widget-session' : 'talkai-chat-session',
+    pollInterval: 3000, // Poll for messages every 3 seconds
   })
   
   // Log the active session ID
@@ -113,11 +114,11 @@ export default function Chat({ isWidget = false, onMinimize, onClose, sessionId 
 
     if (recordingTime > 0.5) {
       // Minimum 0.5 seconds
-      log('info', 'Voice recording valid, sending to Firebase', { duration })
+      log('info', 'Voice recording valid, sending to API', { duration })
 
       try {
-        // Send voice message to Firebase
-        await sendVoiceToFirebase(duration)
+        // Send voice message to API
+        await sendVoiceToAPI(duration)
 
         // Simulate AI response
         setIsTyping(true)
@@ -148,8 +149,8 @@ export default function Chat({ isWidget = false, onMinimize, onClose, sessionId 
     })
 
     try {
-      // Send file message to Firebase
-      await sendFileToFirebase(file, fileUrl)
+      // Send file message to API
+      await sendFileToAPI(file, fileUrl)
 
       // Simulate AI response
       setIsTyping(true)
@@ -211,9 +212,9 @@ export default function Chat({ isWidget = false, onMinimize, onClose, sessionId 
     log('info', 'Selected random product', randomProduct)
 
     try {
-      // Send product recommendation to Firebase
-      await sendProductToFirebase(randomProduct)
-      log('info', 'Product recommendation sent to Firebase', randomProduct)
+      // Send product recommendation to API
+      await sendProductToAPI(randomProduct)
+      log('info', 'Product recommendation sent to API', randomProduct)
     } catch (error) {
       log('error', 'Failed to send product recommendation', error)
     }
