@@ -6,15 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A standalone React-based chat widget using Vite, functioning like Tawk.to or Intercom. The widget embeds into any website using a simple `<script>` tag and provides AI-powered chat functionality for e-commerce sites with Firebase backend integration.
+A standalone React-based chat widget using Vite, functioning like Tawk.to or Intercom. The widget embeds into any website using a simple `<script>` tag and provides AI-powered chat functionality for e-commerce sites. Messages are stored in local state for the current session.
 
 ## Architecture
 
 ### Backend Integration
-- **Firebase Firestore** for real-time message persistence
-- **Firebase Storage** for file/image uploads (configured, not fully implemented)
-- **Firebase Auth** for user authentication (configured)
-- Environment variables for Firebase configuration via `.env` files
+- **Local state management** - Messages persist only during the current session
+- **No external dependencies** - Fully client-side implementation
+- Ready for integration with custom AI endpoints or backend services
 
 ### Build System
 - **React + Vite** for development and bundling
@@ -48,15 +47,14 @@ export default defineConfig(({ mode }) => {
 
 ## Message Types & Data Structure
 
-### Firebase Message Schema
+### Message Schema
 ```typescript
-interface FirebaseMessage {
-  id?: string
+interface Message {
+  id: string
   type: 'text' | 'voice' | 'file' | 'image' | 'product'
   content: string
   sender: 'user' | 'ai'
-  timestamp?: any // Firebase timestamp
-  storedAt?: string
+  timestamp: Date
   duration?: number      // For voice messages (seconds)
   fileUrl?: string       // For file/image uploads
   fileName?: string
@@ -74,12 +72,13 @@ interface FirebaseMessage {
 ```
 
 ### Implementation Status
-- ✅ **Text Messages** - Fully implemented with Firebase persistence
-- 🚧 **Image Messages** - UI complete, Firebase storage pending
-- 🚧 **Audio/Voice Messages** - UI complete with recording, Firebase storage pending
-- 🚧 **File Attachments** - UI complete, Firebase storage pending
-- 🚧 **Product Cards** - UI complete, Firebase storage pending
+- ✅ **Text Messages** - Fully implemented with local state
+- ✅ **Image Messages** - UI complete with preview
+- ✅ **Audio/Voice Messages** - UI complete with recording (60s max)
+- ✅ **File Attachments** - UI complete with drag & drop
+- ✅ **Product Cards** - UI complete
 - ✅ **Skeleton Loading** - Typing indicators during AI processing
+- 📝 **Note**: All messages are client-side only. Backend integration needed for persistence.
 
 ## Widget Integration
 
@@ -94,49 +93,15 @@ window.TalkAIWidget.init({
 ```
 
 ### Session Management
-- Unique session IDs generated using `uuid` for each chat instance
-- Conversations stored in Firebase Firestore with session-based organization
-- Real-time synchronization across multiple browser tabs
+- Messages persist in local component state during the current page session
+- No persistence across page refreshes (can be added with localStorage/sessionStorage)
+- Each widget instance maintains its own independent state
 
 ### Deployment Architecture
 - **GitHub Pages** hosting at `https://quochuydev.github.io/woocommerce-talk-ai/`
 - **CDN-ready** widget.js file for fast loading
 - **Automatic deployments** via GitHub Actions
 - **Cross-origin compatibility** with proper CORS handling
-
-## Firebase Development Setup
-
-### Prerequisites
-```bash
-# Install Firebase CLI globally
-npm install -g firebase-tools
-
-# Login to Firebase account
-firebase login
-
-# Initialize Firebase project (if not already done)
-firebase init hosting
-```
-
-### Environment Configuration
-Required environment variables (create `.env` file):
-```bash
-VITE_FIREBASE_API_KEY=your_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-```
-
-### Local Development with Firebase Emulator
-```bash
-# Start Firebase emulators
-firebase emulators:start
-
-# The app will automatically use emulators when detected
-# Text messages persist locally, other message types are UI-only
-```
 
 ## Development Setup
 
@@ -158,13 +123,7 @@ src/
 ├── index.css            # TailwindCSS + scoped widget styles
 ├── pages/
 │   ├── Home.tsx         # Demo landing page
-│   └── Chat.tsx         # Full chat interface (750+ lines)
-├── firebase/
-│   ├── config.js        # Firebase configuration (environment variables)
-│   ├── firestore.js     # Database operations
-│   ├── auth.js          # Authentication
-│   ├── storage.js       # File storage
-│   └── types.ts         # TypeScript interfaces
+│   └── Chat.tsx         # Full chat interface with all message types
 └── assets/              # Static assets
 ```
 
@@ -178,10 +137,10 @@ src/
 ### Advanced Features
 - **Voice Recording**: 60-second maximum with visual waveform feedback
 - **File Upload**: Drag & drop support with file type validation
-- **Real-time Sync**: Firebase-powered message synchronization
-- **Session Persistence**: Conversations survive page refreshes
+- **Local State Management**: Messages stored in component state
 - **Widget Positioning**: 4 corner positioning options
 - **Theme System**: Light/dark mode support with custom colors
+- **Product Cards**: Rich product recommendation display
 
 ### Style Isolation
 - Scoped CSS classes to prevent conflicts with host site
@@ -190,7 +149,9 @@ src/
 
 ### Performance
 - Single bundle output (JS + CSS inlined for widget)
-- Minimal dependencies (React, Firebase, UUID, React Router)
+- Minimal dependencies (React, React Router, UUID)
+- Widget bundle: ~261 KB (79 KB gzipped)
+- No external API calls - fully client-side
 - Lazy loading for optimal performance
 
 ## Deployment Pipeline
@@ -217,8 +178,8 @@ GitHub Actions workflow automatically:
 
 - XSS protection through React's built-in sanitization
 - CSP-friendly implementation
-- Secure API key handling
-- No sensitive data storage in localStorage
+- No external API calls or data transmission
+- Messages stored in memory only (cleared on page refresh)
 
 ---
 
@@ -236,8 +197,6 @@ GitHub Actions workflow automatically:
 ```bash
 # Setup
 npm install              # Install dependencies
-npm install -g firebase-tools  # Install Firebase CLI
-firebase login           # Authenticate with Firebase
 
 # Development
 npm run dev              # Start dev server on http://localhost:5173
@@ -249,25 +208,23 @@ npm run build:widget     # Build widget to widget-dist/ and copy to public/
 
 # Code Quality
 npm run lint             # ESLint check
-
-# Firebase
-firebase emulators:start # Start local Firebase emulators
-firebase deploy          # Deploy to Firebase Hosting (optional)
 ```
 
 ## Implementation Priorities
 
 ### Current State
-- ✅ Text messages with Firebase persistence
-- 🚧 UI for images, voice, files, products (backend storage pending)
+- ✅ All message types (text, voice, file, image, product) with UI
 - ✅ Widget embedding and positioning
-- ✅ Real-time synchronization for text messages
+- ✅ Local state management for messages
+- ✅ Responsive design with mobile support
+- ✅ Optimized bundle size (~261 KB / 79 KB gzipped)
 
 ### Next Development Steps
-1. **Complete Firebase Storage Integration** for non-text message types
-2. **Implement AI Response Integration** (currently UI mock responses)
-3. **Add Security Rules** for Firebase operations
-4. **Optimize Bundle Size** for faster widget loading
+1. **Add Backend Integration** - Connect to AI API endpoint for real responses
+2. **Add Persistence** - Optional localStorage/sessionStorage for message history
+3. **Implement Real File Handling** - Currently files are preview-only (blob URLs)
+4. **Add Configuration Options** - Customizable colors, branding, welcome messages
+5. **Analytics Integration** - Track widget usage and interactions
 
 ## Important Instructions
 
@@ -278,4 +235,4 @@ firebase deploy          # Deploy to Firebase Hosting (optional)
 - Test widget embedding on different websites
 - Ensure mobile responsiveness at all screen sizes
 - Use TypeScript for all new code
-- Follow existing Firebase patterns for consistency
+- Messages are client-side only - no persistence or backend

@@ -27,7 +27,6 @@ function add_talkai_widget() {
     <script src="https://quochuydev.github.io/woocommerce-talk-ai/widget.js"></script>
     <script>
         TalkAIWidget.init({
-          apiKey: 'your-api-key-here',
           position: 'bottom-right',
           theme: 'light'
         });

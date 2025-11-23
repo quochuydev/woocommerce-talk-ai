@@ -133,10 +133,8 @@ export default function Home() {
 {`<script src="https://quochuydev.github.io/woocommerce-talk-ai/widget.js"></script>
 <script>
     TalkAIWidget.init({
-        apiKey: 'your-api-key-here',
         position: 'bottom-right', // bottom-right, bottom-left, top-right, top-left
         theme: 'light',
-        primaryColor: '#FF3988'
     });
 </script>`}
             </pre>

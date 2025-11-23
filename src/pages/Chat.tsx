@@ -1,8 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useState, useEffect } from 'react'
-import { sendMessage, subscribeToMessages, updateConversation } from '../firebase/firestore'
-import type { FirebaseMessage } from '../firebase/types'
-import { v4 as uuidv4 } from 'uuid'
+import { useState } from 'react'
 
 interface ChatProps {
   isWidget?: boolean
@@ -39,23 +36,12 @@ export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProp
   const [recordingTime, setRecordingTime] = useState(0)
   const [isTyping, setIsTyping] = useState(false)
   const [dragOver, setDragOver] = useState(false)
-  const [sessionId] = useState(() => uuidv4())
 
-  // Enhanced logging utility
+  // Simplified logging utility
   const log = (level: 'info' | 'warn' | 'error', message: string, data?: any) => {
     const timestamp = new Date().toISOString()
     const logMessage = `[TalkAI-${level.toUpperCase()}] ${timestamp} - ${message}`
     
-    console.group(logMessage)
-    if (data) {
-      console.log('Data:', data)
-    }
-    console.log('Session ID:', sessionId)
-    console.log('Widget Mode:', isWidget)
-    console.trace('Stack trace')
-    console.groupEnd()
-    
-    // Also log to console in a simplified way for production debugging
     if (level === 'error') {
       console.error(logMessage, data)
     } else if (level === 'warn') {
@@ -65,91 +51,41 @@ export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProp
     }
   }
 
-  // Initialize Firebase listeners
-  useEffect(() => {
-    log('info', 'Initializing chat session')
-    
-    // Subscribe to messages
-    const unsubscribe = subscribeToMessages(sessionId, (firebaseMessages: FirebaseMessage[]) => {
-      log('info', 'Received messages from Firebase', { count: firebaseMessages.length })
-      // Convert Firebase messages to local Message format
-      const convertedMessages: Message[] = firebaseMessages.map(msg => ({
-        ...msg,
-        id: msg.id || Date.now().toString(), // Ensure id is never undefined
-        timestamp: msg.timestamp || new Date()
-      }))
-      setMessages(convertedMessages)
-    })
-
-    // Initialize conversation metadata
-    updateConversation(sessionId, {
-      createdAt: new Date(),
-      isWidget,
-      userAgent: navigator.userAgent,
-      url: window.location.href
-    }).catch((error: any) => {
-      log('error', 'Failed to initialize conversation', error)
-    })
-
-    return () => {
-      log('info', 'Cleaning up chat session')
-      unsubscribe()
-    }
-  }, [sessionId, isWidget])
-
-  const sendTextMessage = async () => {
+  const sendTextMessage = () => {
     if (!inputText.trim()) {
       log('warn', 'Attempted to send empty message')
       return
     }
 
     const messageContent = inputText.trim()
-    log('info', 'Sending text message', { content: messageContent, length: messageContent.length })
+    log('info', 'Sending text message', { content: messageContent })
     
     setInputText('')
 
-    try {
-      // Send user message to Firebase
-      const userMessageData = {
-        type: 'text' as const,
-        content: messageContent,
-        sender: 'user' as const
-      }
-      
-      log('info', 'Saving user message to Firebase', userMessageData)
-      await sendMessage(sessionId, userMessageData)
-      log('info', 'User message saved successfully')
-      
-      // Simulate AI response (only for text messages)
-      setIsTyping(true)
-      log('info', 'Starting AI response simulation')
-      
-      setTimeout(async () => {
-        try {
-          const aiResponseData = {
-            type: 'text' as const,
-            content: 'Thanks for your message! This is a demo response from the AI assistant.',
-            sender: 'ai' as const
-          }
-          
-          log('info', 'Saving AI response to Firebase', aiResponseData)
-          await sendMessage(sessionId, aiResponseData)
-          log('info', 'AI response saved successfully')
-          
-        } catch (error) {
-          log('error', 'Failed to save AI response', error)
-        } finally {
-          setIsTyping(false)
-        }
-      }, 1500)
-      
-    } catch (error) {
-      log('error', 'Failed to send text message', error)
-      setIsTyping(false)
-      
-      // Show error message to user
-      alert('Failed to send message. Please try again.')
+    // Add user message to local state
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      type: 'text',
+      content: messageContent,
+      sender: 'user',
+      timestamp: new Date()
     }
+    
+    setMessages(prev => [...prev, userMessage])
+    
+    // Simulate AI response
+    setIsTyping(true)
+    setTimeout(() => {
+      const aiResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'text',
+        content: 'Thanks for your message! This is a demo response from the AI assistant.',
+        sender: 'ai',
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, aiResponse])
+      setIsTyping(false)
+    }, 1500)
   }
 
   const startRecording = () => {
@@ -186,8 +122,7 @@ export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProp
         duration
       }
       
-      // Note: Voice messages are NOT stored in Firebase yet
-      log('warn', 'Voice message created but NOT stored in Firebase (implementation pending)', voiceMessage)
+      log('info', 'Voice message created', voiceMessage)
       setMessages(prev => [...prev, voiceMessage])
       
       // Simulate AI response
@@ -200,7 +135,6 @@ export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProp
           sender: 'ai',
           timestamp: new Date()
         }
-        log('warn', 'AI response to voice message created but NOT stored in Firebase', aiResponse)
         setMessages(prev => [...prev, aiResponse])
         setIsTyping(false)
       }, 2000)
@@ -233,8 +167,7 @@ export default function Chat({ isWidget = false, onMinimize, onClose }: ChatProp
       fileSize: file.size
     }
     
-    // Note: File messages are NOT stored in Firebase yet
-    log('warn', 'File message created but NOT stored in Firebase (implementation pending)', fileMessage)
+    log('info', 'File message created', fileMessage)
     setMessages(prev => [...prev, fileMessage])
     
     // Simulate AI response
