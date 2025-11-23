@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useChatAPI } from '../hooks/useChatAPI'
 import { generateAIResponse } from '../services/aiService'
+import { useGoogleAuth } from '../hooks/useGoogleAuth'
 
 interface ChatProps {
   isWidget?: boolean
@@ -10,6 +11,12 @@ interface ChatProps {
 }
 
 export default function Chat({ isWidget = false, onMinimize, onClose, sessionId }: ChatProps) {
+  // Google Authentication
+  const { user, signInWithGoogle, signOut, loading: authLoading, isAuthenticated } = useGoogleAuth()
+
+  // Use authenticated user ID as session ID, fallback to provided sessionId or generate one
+  const effectiveSessionId = isAuthenticated && user ? `user_${user.uid}` : sessionId
+
   // Simplified logging utility (memoized)
   const log = useCallback((level: 'info' | 'warn' | 'error', message: string, data?: any) => {
     const timestamp = new Date().toISOString()
@@ -25,9 +32,12 @@ export default function Chat({ isWidget = false, onMinimize, onClose, sessionId 
   }, [])
 
   // Memoize error handler to prevent re-renders
-  const handleFirebaseError = useCallback((error: Error) => {
-    log('error', 'API error', error)
-  }, [log])
+  const handleFirebaseError = useCallback(
+    (error: Error) => {
+      log('error', 'API error', error)
+    },
+    [log],
+  )
 
   // API-based chat hook with localStorage persistence
   const {
@@ -38,13 +48,13 @@ export default function Chat({ isWidget = false, onMinimize, onClose, sessionId 
     sendAIResponse,
     sendProductRecommendation: sendProductToAPI,
   } = useChatAPI({
-    sessionId: sessionId, // Use provided sessionId or auto-restore from localStorage
+    sessionId: effectiveSessionId, // Use authenticated user ID or provided sessionId
     onError: handleFirebaseError,
     persistSession: true, // Enable localStorage persistence
     storageKey: isWidget ? 'talkai-widget-session' : 'talkai-chat-session',
     pollInterval: 3000, // Poll for messages every 3 seconds
   })
-  
+
   // Log the active session ID
   useEffect(() => {
     log('info', 'Active session ID', { sessionId: activeSessionId })
@@ -74,12 +84,12 @@ export default function Chat({ isWidget = false, onMinimize, onClose, sessionId 
       log('info', 'Calling Next.js API', { sessionId: activeSessionId, message: messageContent })
 
       // Call Next.js API - it will save user message and generate AI response
-      const response = await generateAIResponse(activeSessionId, messageContent)
-      
+      const response = await generateAIResponse(activeSessionId, messageContent, user?.token)
+
       if (!response.success) {
         log('error', 'AI response generation failed', response.error)
       }
-      
+
       setIsTyping(false)
       log('info', 'AI response completed', { success: response.success })
     } catch (error) {
@@ -289,12 +299,6 @@ export default function Chat({ isWidget = false, onMinimize, onClose, sessionId 
                   <span className="tw-text-lg tw-font-bold">TalkAI</span>
                 </div>
               </div>
-              <div className="tw-flex tw-items-center tw-space-x-4">
-                <div className="tw-flex tw-items-center tw-space-x-2">
-                  <div className="tw-w-2 tw-h-2 tw-bg-green-500 tw-rounded-full tw-animate-pulse-slow"></div>
-                  <span className="tw-text-sm tw-text-gray-600">Live Demo</span>
-                </div>
-              </div>
             </div>
           </div>
         </nav>
@@ -308,25 +312,75 @@ export default function Chat({ isWidget = false, onMinimize, onClose, sessionId 
             <div className="tw-bg-gradient-to-r tw-from-primary-500 tw-to-primary-600 tw-text-white tw-p-4">
               <div className="tw-flex tw-items-center tw-justify-between">
                 <div className="tw-flex tw-items-center tw-space-x-3">
+                  {/* User Profile or Default Avatar */}
                   <div className="tw-relative">
-                    <div className="tw-w-10 tw-h-10 tw-bg-white tw-rounded-full tw-flex tw-items-center tw-justify-center tw-shadow-lg">
-                      <svg className="tw-w-5 tw-h-5 tw-text-primary-500" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 3.04 1.05 4.35L2 22l5.65-1.05C9.96 21.64 11.46 22 13 22h7c1.1 0 2-.9 2-2V12c0-5.52-4.48-10-10-10z" />
-                      </svg>
-                    </div>
+                    {isAuthenticated && user?.photoURL ? (
+                      <img src={user.photoURL} alt={user.displayName} className="tw-w-10 tw-h-10 tw-rounded-full tw-border-2 tw-border-white tw-shadow-lg" />
+                    ) : (
+                      <div className="tw-w-10 tw-h-10 tw-bg-white tw-rounded-full tw-flex tw-items-center tw-justify-center tw-shadow-lg">
+                        {isAuthenticated && user?.displayName ? (
+                          <span className="tw-text-primary-500 tw-font-semibold">{user.displayName.charAt(0).toUpperCase()}</span>
+                        ) : (
+                          <svg className="tw-w-5 tw-h-5 tw-text-primary-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 3.04 1.05 4.35L2 22l5.65-1.05C9.96 21.64 11.46 22 13 22h7c1.1 0 2-.9 2-2V12c0-5.52-4.48-10-10-10z" />
+                          </svg>
+                        )}
+                      </div>
+                    )}
                     <div className="tw-absolute tw--bottom-1 tw--right-1 tw-w-3 tw-h-3 tw-bg-green-500 tw-rounded-full tw-border-2 tw-border-white"></div>
                   </div>
                   <div>
-                    <h3 className="tw-m-0 tw-text-base tw-font-semibold">TalkAI Assistant</h3>
+                    <h3 className="tw-m-0 tw-text-base tw-font-semibold">{isAuthenticated ? user?.displayName : 'TalkAI Assistant'}</h3>
                     <div className="tw-flex tw-items-center tw-space-x-2">
                       <div className="tw-w-2 tw-h-2 tw-bg-green-400 tw-rounded-full tw-animate-pulse"></div>
-                      <p className="tw-m-0 tw-text-xs tw-opacity-90">Online</p>
+                      <p className="tw-m-0 tw-text-xs tw-opacity-90">{isAuthenticated ? 'Connected' : 'Online'}</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Control Buttons */}
+                {/* Auth and Control Buttons */}
                 <div className="tw-flex tw-items-center tw-space-x-1">
+                  {/* Google Sign-In/Out Button */}
+                  {!isAuthenticated ? (
+                    <button
+                      onClick={signInWithGoogle}
+                      disabled={authLoading}
+                      className="tw-flex tw-items-center tw-space-x-2 tw-bg-white tw-text-gray-700 tw-px-3 tw-py-1.5 tw-rounded-lg tw-text-sm tw-font-medium hover:tw-bg-gray-50 tw-transition-all tw-duration-200 disabled:tw-opacity-50"
+                      title="Sign in with Google"
+                    >
+                      <svg className="tw-w-4 tw-h-4" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path
+                          fill="#34A853"
+                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                        />
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                        <path
+                          fill="#EA4335"
+                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                        />
+                      </svg>
+                      <span>{authLoading ? 'Signing in...' : 'Sign In'}</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={signOut}
+                      className="tw-flex tw-items-center tw-space-x-2 tw-bg-white tw-bg-opacity-20 hover:tw-bg-opacity-30 tw-px-3 tw-py-1.5 tw-rounded-lg tw-text-sm tw-font-medium tw-transition-all tw-duration-200"
+                      title="Sign out"
+                    >
+                      <svg className="tw-w-4 tw-h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                        />
+                      </svg>
+                      <span>Sign Out</span>
+                    </button>
+                  )}
+
+                  {/* Minimize Button */}
                   <button
                     onClick={handleMinimize}
                     className="tw-w-8 tw-h-8 tw-rounded-full tw-bg-white tw-bg-opacity-20 hover:tw-bg-opacity-30 tw-transition-all tw-duration-200 tw-flex tw-items-center tw-justify-center"
@@ -336,6 +390,7 @@ export default function Chat({ isWidget = false, onMinimize, onClose, sessionId 
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                     </svg>
                   </button>
+                  {/* Close Button */}
                   <button
                     onClick={handleClose}
                     className="tw-w-8 tw-h-8 tw-rounded-full tw-bg-white tw-bg-opacity-20 hover:tw-bg-opacity-30 tw-transition-all tw-duration-200 tw-flex tw-items-center tw-justify-center"
@@ -588,7 +643,7 @@ export default function Chat({ isWidget = false, onMinimize, onClose, sessionId 
                       type="text"
                       value={inputText}
                       onChange={(e) => setInputText(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && sendTextMessage()}
+                      onKeyDown={(e) => e.key === 'Enter' && sendTextMessage()}
                       placeholder="Type your message here..."
                       className="tw-w-full tw-bg-white tw-border tw-border-gray-200 tw-rounded-2xl tw-px-4 tw-py-3 tw-pr-12 tw-text-sm tw-outline-none focus:tw-border-primary-300 focus:tw-ring-2 focus:tw-ring-primary-100 tw-transition-all"
                       disabled={isRecording}

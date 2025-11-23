@@ -4,6 +4,7 @@ export interface Message {
   content: string
   sender: 'user' | 'ai'
   timestamp: Date | FirebaseFirestore.Timestamp
+  userId?: string // Firebase Auth UID of the user (optional for anonymous users)
   duration?: number
   fileUrl?: string
   fileName?: string

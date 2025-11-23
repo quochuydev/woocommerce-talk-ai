@@ -1,5 +1,9 @@
 import * as admin from 'firebase-admin'
 
+console.log(`debug:process.env.FIREBASE_PROJECT_ID`, process.env.FIREBASE_PROJECT_ID)
+console.log(`debug:process.env.FIREBASE_CLIENT_EMAIL`, process.env.FIREBASE_CLIENT_EMAIL)
+console.log(`debug:process.env.FIREBASE_PRIVATE_KEY length`, process.env.FIREBASE_PRIVATE_KEY?.length)
+
 if (!admin.apps.length) {
   try {
     admin.initializeApp({

@@ -3,27 +3,6 @@ import WidgetLoader from '../components/WidgetLoader'
 export default function Home() {
   return (
     <div className="widget-root tw-min-h-screen tw-bg-white">
-      {/* Navigation */}
-      <nav className="tw-bg-white tw-shadow-sm tw-border-b tw-border-gray-100">
-        <div className="tw-max-w-7xl tw-mx-auto tw-px-4 sm:tw-px-6 lg:tw-px-8">
-          <div className="tw-flex tw-justify-between tw-h-16">
-            <div className="tw-flex tw-items-center tw-space-x-3">
-              <div className="tw-w-8 tw-h-8 tw-bg-primary-500 tw-rounded-lg tw-flex tw-items-center tw-justify-center">
-                <svg className="tw-w-5 tw-h-5 tw-text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 3.04 1.05 4.35L2 22l5.65-1.05C9.96 21.64 11.46 22 13 22h7c1.1 0 2-.9 2-2V12c0-5.52-4.48-10-10-10zm0 18c-1.1 0-2.18-.25-3.15-.74L3 20l.74-5.85C3.25 13.18 3 12.1 3 11c0-4.97 4.03-9 9-9s9 4.03 9 9-4.03 9-9 9z" />
-                </svg>
-              </div>
-              <h1 className="tw-text-xl tw-font-bold tw-text-gray-900">TalkAI</h1>
-            </div>
-            <div className="tw-flex tw-items-center tw-space-x-4">
-              <a href="https://quochuydev.github.io/talk-ai-widget/" target="_blank" rel="noopener noreferrer" className="tw-bg-primary-500 hover:tw-bg-primary-600 tw-text-white tw-px-6 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-transition-colors">
-                Try Live Demo
-              </a>
-            </div>
-          </div>
-        </div>
-      </nav>
-
       {/* Hero Section */}
       <div className="tw-max-w-7xl tw-mx-auto tw-px-4 sm:tw-px-6 lg:tw-px-8 tw-py-12">
         <div className="tw-grid lg:tw-grid-cols-2 tw-gap-8 tw-items-center">
@@ -39,14 +18,6 @@ export default function Home() {
             </p>
 
             <div className="tw-mt-6 tw-flex tw-items-center tw-space-x-4">
-              <a
-                href="https://quochuydev.github.io/talk-ai-widget/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="tw-bg-primary-500 hover:tw-bg-primary-600 tw-text-white tw-px-6 tw-py-2 tw-rounded-lg tw-text-sm tw-font-medium tw-transition-colors tw-shadow-lg"
-              >
-                Try Live Demo
-              </a>
               <a href="#integration" className="tw-text-primary-600 hover:tw-text-primary-700 tw-font-medium tw-text-sm">
                 See Integration →
               </a>
@@ -94,7 +65,7 @@ export default function Home() {
 
           <div className="tw-bg-gray-900 tw-rounded-xl tw-p-4 tw-overflow-x-auto">
             <pre className="tw-text-green-400 tw-text-xs tw-leading-relaxed tw-text-left">
-              {`<script src="https://your-domain.com/widget.js"></script>
+              {`<script src="https://quochuydev.github.io/talk-ai-widget/widget.js"></script>
 <script>
     TalkAIWidget.init({
         position: 'bottom-right',
@@ -123,7 +94,6 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* Widget Embed - Live Demo on Landing Page */}
       <WidgetLoader />
     </div>
   )

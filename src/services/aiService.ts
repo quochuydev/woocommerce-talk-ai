@@ -11,7 +11,7 @@ interface GenerateAIResponseResponse {
 }
 
 // API base URL - can be configured for production
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://talk-ai-widget.vercel.app'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 /**
  * Call Next.js API to generate AI response
@@ -19,17 +19,20 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://talk-ai-widge
  * @param message - User message content
  * @param onChunk - Optional callback for streaming responses
  */
-export async function generateAIResponse(
-  sessionId: string,
-  message: string,
-  onChunk?: (text: string) => void
-): Promise<GenerateAIResponseResponse> {
+export async function generateAIResponse(sessionId: string, message: string, authToken?: string, onChunk?: (text: string) => void): Promise<GenerateAIResponseResponse> {
   try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+
+    // Add authorization header if user is authenticated
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`
+    }
+
     const response = await fetch(`${API_BASE_URL}/api/chat`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         sessionId,
         message,

@@ -29,7 +29,7 @@ interface UseChatAPIOptions {
   pollInterval?: number // Polling interval in ms (default: 3000)
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://talk-ai-widget.vercel.app'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 export const useChatAPI = (options: UseChatAPIOptions = {}) => {
   const {
@@ -53,7 +53,6 @@ export const useChatAPI = (options: UseChatAPIOptions = {}) => {
       return providedSessionId
     }
 
-    // Try to restore from localStorage
     if (persistSession) {
       try {
         const stored = localStorage.getItem(storageKey)
@@ -97,13 +96,13 @@ export const useChatAPI = (options: UseChatAPIOptions = {}) => {
   const fetchMessages = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/messages?sessionId=${sessionId}&limit=100`)
-      
+
       if (!response.ok) {
         throw new Error(`Failed to fetch messages: ${response.statusText}`)
       }
 
       const data = await response.json()
-      
+
       if (data.success && data.messages) {
         // Convert timestamp strings back to Date objects
         const parsedMessages = data.messages.map((msg: any) => ({
@@ -112,7 +111,7 @@ export const useChatAPI = (options: UseChatAPIOptions = {}) => {
         }))
         setMessages(parsedMessages)
       }
-      
+
       setIsLoading(false)
     } catch (error) {
       console.error('[useChatAPI] Failed to fetch messages:', error)
@@ -124,7 +123,7 @@ export const useChatAPI = (options: UseChatAPIOptions = {}) => {
   // Poll for messages
   useEffect(() => {
     console.log('[useChatAPI] Setting up message polling for session:', sessionId)
-    
+
     // Initial fetch
     fetchMessages()
 
@@ -164,10 +163,10 @@ export const useChatAPI = (options: UseChatAPIOptions = {}) => {
       }
 
       const data = await response.json()
-      
+
       // Immediately fetch messages to update UI
       await fetchMessages()
-      
+
       return data.messageId
     } catch (error) {
       console.error('[useChatAPI] Failed to send message:', error)

@@ -1,27 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/firebase-admin'
+import { adminAuth } from '@/lib/firebase-admin'
 import { ClaudeProvider } from '@/lib/anthropic'
 import { getConversationHistory, saveMessage } from '@/lib/conversation'
 import { STORE_INFO } from '@/lib/store'
-import { Message } from '@/types/message'
 
 export async function POST(request: NextRequest) {
   try {
     const { sessionId, message, stream = true } = await request.json()
 
     if (!sessionId || !message) {
-      return NextResponse.json(
-        { error: 'Missing sessionId or message' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Missing sessionId or message' }, { status: 400 })
+    }
+
+    // Verify Firebase ID token if provided
+    let uid = null
+    const authHeader = request.headers.get('authorization')
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const idToken = authHeader.substring(7)
+      try {
+        const decodedToken = await adminAuth.verifyIdToken(idToken)
+        uid = decodedToken.uid
+        console.log('[API] Authenticated user:', { uid, email: decodedToken.email })
+      } catch (error) {
+        console.warn('[API] Invalid auth token:', error)
+        // Continue without authentication - allow anonymous access
+      }
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) {
-      return NextResponse.json(
-        { error: 'ANTHROPIC_API_KEY not configured' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured' }, { status: 500 })
     }
 
     // Save user message to Firestore (moved from client to backend)
@@ -30,6 +40,7 @@ export async function POST(request: NextRequest) {
       content: message,
       sender: 'user',
       timestamp: new Date(),
+      ...(uid && { userId: uid }), // Add user ID if authenticated
     })
 
     console.log('[API] Saved user message:', userMessageId)
@@ -55,10 +66,8 @@ export async function POST(request: NextRequest) {
               },
               (chunk) => {
                 fullContent += chunk
-                controller.enqueue(
-                  encoder.encode(`data: ${JSON.stringify({ chunk })}\n\n`)
-                )
-              }
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ chunk })}\n\n`))
+              },
             )
 
             // Save AI response to Firestore
@@ -67,21 +76,14 @@ export async function POST(request: NextRequest) {
               content: fullContent,
               sender: 'ai',
               timestamp: new Date(),
+              ...(uid && { userId: uid }), // Add user ID if authenticated
             })
 
-            controller.enqueue(
-              encoder.encode(
-                `data: ${JSON.stringify({ done: true, messageId: aiMessageId })}\n\n`
-              )
-            )
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true, messageId: aiMessageId })}\n\n`))
             controller.close()
           } catch (error: any) {
             console.error('Streaming error:', error)
-            controller.enqueue(
-              encoder.encode(
-                `data: ${JSON.stringify({ error: error.message })}\n\n`
-              )
-            )
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: error.message })}\n\n`))
             controller.close()
           }
         },
@@ -118,9 +120,6 @@ export async function POST(request: NextRequest) {
     }
   } catch (error: any) {
     console.error('Chat API error:', error)
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 })
   }
 }
