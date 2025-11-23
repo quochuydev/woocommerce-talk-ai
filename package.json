@@ -1,5 +1,5 @@
 {
-  "name": "woocommerce-talk-ai",
+  "name": "talk-ai-widget",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,9 +12,9 @@
   },
   "dependencies": {
     "@types/uuid": "^10.0.0",
+    "firebase": "^12.6.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-router-dom": "^7.7.1",
     "uuid": "^11.1.0"
   },
   "devDependencies": {

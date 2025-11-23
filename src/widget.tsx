@@ -21,17 +21,17 @@ class ChatWidget {
       containerId: 'chat-widget-container',
       theme: 'light',
       position: 'bottom-right',
-      ...config
+      ...config,
     }
-    
+
     // Enhanced logging for widget
     this.log('info', 'ChatWidget initialized', this.config)
   }
-  
+
   private log(level: 'info' | 'warn' | 'error', message: string, data?: any) {
     const timestamp = new Date().toISOString()
     const logMessage = `[TalkAI-Widget-${level.toUpperCase()}] ${timestamp} - ${message}`
-    
+
     console.group(logMessage)
     if (data) {
       console.log('Data:', data)
@@ -41,7 +41,7 @@ class ChatWidget {
     console.log('Page URL:', window.location.href)
     console.trace('Stack trace')
     console.groupEnd()
-    
+
     // Also log to console in a simplified way
     if (level === 'error') {
       console.error(logMessage, data)
@@ -54,12 +54,12 @@ class ChatWidget {
 
   init() {
     this.log('info', 'Initializing widget')
-    
+
     try {
       // Inject CSS if not already done
       this.log('info', 'Injecting CSS')
       this.injectCSS()
-      
+
       // Create container if it doesn't exist
       this.container = document.getElementById(this.config.containerId!)
       if (!this.container) {
@@ -79,10 +79,9 @@ class ChatWidget {
       this.root.render(
         <React.StrictMode>
           <App widgetConfig={this.config} />
-        </React.StrictMode>
+        </React.StrictMode>,
       )
       this.log('info', 'Widget initialization completed successfully')
-      
     } catch (error) {
       this.log('error', 'Failed to initialize widget', error)
       throw error
@@ -94,62 +93,61 @@ class ChatWidget {
       this.log('info', 'CSS already injected, skipping')
       return
     }
-    
+
     // Check if CSS is already loaded
     if (document.getElementById('talkai-widget-styles')) {
       this.log('info', 'CSS link already exists, skipping')
       return
     }
-    
+
     // Try to load CSS from same domain as widget.js
     const currentScript = document.currentScript as HTMLScriptElement
     let cssUrl = './widget.css' // fallback
-    
+
     if (currentScript && currentScript.src) {
       cssUrl = currentScript.src.replace(/widget\.js$/, 'widget.css')
     }
-    
+
     this.log('info', 'Injecting CSS', { cssUrl, currentScript: currentScript?.src })
-    
+
     // Create and inject CSS link
     const link = document.createElement('link')
     link.id = 'talkai-widget-styles'
     link.rel = 'stylesheet'
     link.type = 'text/css'
     link.href = cssUrl
-    link.onload = () => { 
+    link.onload = () => {
       this.cssInjected = true
       this.log('info', 'CSS loaded successfully', { cssUrl })
     }
     link.onerror = () => {
       this.log('warn', 'Could not load CSS, trying fallback', { originalUrl: cssUrl })
       // Fallback: try from GitHub Pages
-      const fallbackCss = 'https://quochuydev.github.io/woocommerce-talk-ai/widget.css'
+      const fallbackCss = 'https://quochuydev.github.io/talk-ai-widget/widget.css'
       link.href = fallbackCss
     }
-    
+
     document.head.appendChild(link)
     this.log('info', 'CSS link element added to head')
   }
 
   destroy() {
     this.log('info', 'Destroying widget')
-    
+
     try {
       if (this.root) {
         this.log('info', 'Unmounting React root')
         this.root.unmount()
         this.root = null
       }
-      
+
       if (this.container && this.container.parentNode) {
         this.log('info', 'Removing container from DOM')
         this.container.parentNode.removeChild(this.container)
         this.container = null
       }
-      
+
       this.log('info', 'Widget destroyed successfully')
-      
     } catch (error) {
       this.log('error', 'Error during widget destruction', error)
     }
@@ -161,12 +159,12 @@ class ChatWidget {
       z-index: 999999;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     `
-    
+
     const positionStyles = {
       'bottom-right': 'bottom: 20px; right: 20px;',
       'bottom-left': 'bottom: 20px; left: 20px;',
       'top-right': 'bottom: 20px; right: 20px;',
-      'top-left': 'bottom: 20px; left: 20px;'
+      'top-left': 'bottom: 20px; left: 20px;',
     }
 
     return baseStyles + positionStyles[this.config.position!]
@@ -185,7 +183,7 @@ declare global {
 const TalkAIWidget = {
   init: (config?: WidgetConfig) => {
     console.log('[TalkAI-Widget] Initializing TalkAI Widget', config)
-    
+
     try {
       const widget = new ChatWidget(config)
       widget.init()
@@ -195,7 +193,7 @@ const TalkAIWidget = {
       console.error('[TalkAI-Widget] Failed to initialize widget:', error)
       throw error
     }
-  }
+  },
 }
 
 // Assign to window for IIFE builds
